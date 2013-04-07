@@ -30,6 +30,11 @@ int buffer_resize(buffer_t *buffer, size_t size);
 // move the current position/offset
 void buffer_set_position(buffer_t *buffer, size_t position);
 
+// some helper routines
+int buffer_get_position(buffer_t *buffer)
+size_t buffer_get_length(buffer_t *buffer)
+size_t buffer_get_size(buffer_t *buffer)
+
 // write a hex dump of buffer to file
 void buffer_dump(buffer_t *buffer, FILE *file);
 
@@ -47,4 +52,10 @@ int buffer_read_word(buffer_t *buffer, short *data);
 int buffer_read_dword(buffer_t *buffer, int *data);
 int buffer_read_string(buffer_t *buffer, char *data, size_t max_length);
 
+// read data from the buffer, but don't increment our position
+int buffer_peek_data(buffer_t *buffer, void *data, size_t length);
+int buffer_peek_byte(buffer_t *buffer, char *data);
+int buffer_peek_word(buffer_t *buffer, short *data);
+int buffer_peek_dword(buffer_t *buffer, int *data);
+int buffer_peek_string(buffer_t *buffer, char *data, size_t max_length);
 #endif

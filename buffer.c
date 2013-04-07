@@ -4,10 +4,12 @@
 
 #include "buffer.h"
 
+#define DEFAULT_BUF_SIZE 256
+
 // create a buffer with default size 256 bytes
 buffer_t *buffer_create()
 {
-   return buffer_create_size(256);
+   return buffer_create_size(DEFAULT_BUF_SIZE);
 }
 
 // create a buffer (filled with null chars) of a specified size in bytes
@@ -16,7 +18,7 @@ buffer_t *buffer_create()
 buffer_t *buffer_create_size(size_t size)
 {
 	if (size == 0)
-		size = 256;
+		size = DEFAULT_BUF_SIZE;
 
 	buffer_t *new_buffer = malloc(sizeof(buffer_t));
 
@@ -92,6 +94,24 @@ void buffer_set_position(buffer_t *buffer, size_t position)
 	// the buffer will be resized if a write is attempted
 	//	when position > buffer->position
 	buffer->position = position;
+}
+
+// return the current position
+int buffer_get_position(buffer_t *buffer)
+{
+	return buffer->position;
+}
+
+// return the length of the buffer
+size_t buffer_get_length(buffer_t *buffer)
+{
+	return buffer->length;
+}
+
+// return the size of the allocated memory block
+size_t buffer_get_size(buffer_t *buffer)
+{
+	return buffer->size;
 }
 
 // creates a hex dump of data within our buffer
@@ -200,18 +220,11 @@ void buffer_write_string(buffer_t *buffer, char *data)
 //		- returns 1 on failure
 int buffer_read_data(buffer_t *buffer, void *data, size_t length)
 {
-	// make sure the buffer is valid!
-	if (buffer == NULL)
-		return 1;
-
-	// don't read past the buffer!
-	if ((length + buffer->position) > buffer->length)
-		return 1;
-
-	memcpy(data, buffer->data + buffer->position, length);
+	int res = buffer_peek_data(buffer, data, length);
+	
 	buffer->position += length;
 
-	return 0;
+	return res;
 }
 
 // read a byte from the buffer
@@ -244,35 +257,87 @@ int buffer_read_dword(buffer_t *buffer, int *data)
 //		- returns 2 when finding we didn't read a null before max_length
 int buffer_read_string(buffer_t *buffer, char *data, size_t max_length)
 {
-	size_t length = 0;
-	size_t position;
+	int res = buffer_peek_string(buffer, data, max_length);
 
-	// make sure the buffer is valid!
-	if (buffer->data == NULL)
-		return 1;
+	buffer->position += strlen(data) + 1;
 
-	position = buffer->position;
+	return res;
+}
 
-	// make sure we don't try to read past the buffer size
-	if ((position + max_length) > buffer->length)
-		return 1;
+// read data from the buffer of a specified size without incremeting current position
+//		- read data is returned by ref (data)
+// 	- returns 0 on success
+//		- returns 1 on failure
+int buffer_peek_data(buffer_t *buffer, void *data, size_t length)
+{
+   // make sure the buffer is valid!
+   if (buffer == NULL)
+      return 1;
 
-	// copy character by character until we hit max_length or a null	
-	while ((buffer->data[position] != '\0') && (length < max_length))
-	{
-		data[length] = buffer->data[position];
-		position++;
-		length++;
-	}
+   // don't read past the buffer!
+   if ((length + buffer->position) > buffer->length)
+      return 1;
 
-	buffer->position += length + 1;
+   memcpy(data, buffer->data + buffer->position, length);
 	
-	// make sure we're null-terminated
-	data[length] = '\0';
+	return 0;	
+}
 
-	// we read as much as we could, but didn't hit a null
-	if (buffer->data[position] != '\0')
-		return 2;
+// read a byte from the buffer without incrementing current position
+//		- returns 0 for success, 1 for failure
+int buffer_peek_byte(buffer_t *buffer, char *data)
+{
+	return buffer_peek_data(buffer, data, 1);
+}
 
-	return 0;
+// read a word (2 bytes) from the buffer without incrementing current position
+//		- returns 0 for success, 1 for failure
+int buffer_peek_word(buffer_t *buffer, short *data)
+{
+	return buffer_peek_data(buffer, data, 2);
+}
+
+// read a dword (4 bytes) from the buffer without incrementing current position
+//		- returns 0 for success, 1 for failure
+int buffer_peek_dword(buffer_t *buffer, int *data)
+{
+	return buffer_peek_data(buffer, data, 4);
+}
+
+// read a null-terminated string from the buffer without incrementing current position
+//		- read data is returned by ref (data)
+//		- returns 0 on success
+//		- returns 1 on failure (invalid buffer, attempt to read past buffer size)
+//		- returns 2 when a null is not read before reaching max_length 
+int buffer_peek_string(buffer_t *buffer, char *data, size_t max_length)
+{
+   size_t length = 0;
+   size_t position;
+
+   // make sure the buffer is valid!
+   if (buffer->data == NULL)
+      return 1;
+
+   position = buffer->position;
+
+   // make sure we don't try to read past the buffer size
+   if ((position + max_length) > buffer->length)
+      return 1;
+
+   // copy character by character until we hit max_length or a null
+   while ((buffer->data[position] != '\0') && (length < max_length))
+   {
+      data[length] = buffer->data[position];
+      position++;
+      length++;
+   }
+
+   // make sure we're null-terminated
+   data[length] = '\0';
+
+   // we read as much as we could, but didn't hit a null
+   if (buffer->data[position] != '\0')
+      return 2;
+
+   return 0;
 }

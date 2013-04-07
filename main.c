@@ -35,23 +35,36 @@ int main()
 	buffer_set_position(buff, 0);
 
 	char bytes[2];
+	buffer_peek_byte(buff, &bytes[0]);
+	printf("peek byte : %c\n", bytes[0]);
 	buffer_read_byte(buff, &bytes[0]);
-	buffer_read_byte(buff, &bytes[1]);
-
 	printf("read byte : %c\n", bytes[0]);
+	
+	buffer_peek_byte(buff, &bytes[1]);
+	printf("peek byte : %c\n", bytes[1]);
+	buffer_read_byte(buff, &bytes[1]);
 	printf("read byte : %c\n", bytes[1]);
 
 	short word;
+	buffer_peek_word(buff, &word);
+	printf("peek word : %x\n", word);
 	buffer_read_word(buff, &word);
 	printf("read word : %x\n", word);
 
 	int dword;
+	buffer_peek_dword(buff, &dword);
+	printf("peek dword : %x\n", dword);
 	buffer_read_dword(buff, &dword);
 	printf("read dword : %x\n", dword);
 
 	char string[20] = {};
+	buffer_peek_string(buff, string, 20);
+	printf("peek string : %s\n", string);
 	buffer_read_string(buff, string, 20);
-	printf("read string : %s\n", string); 
+	printf("read string : %s\n", string);
+
+	buffer_peek_string(buff, string, 20);
+	printf("peek string : %s\n", string); 
 	buffer_read_string(buff, string, 20);
 	printf("read string : %s\n", string);
 
