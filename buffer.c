@@ -50,6 +50,14 @@ void buffer_destroy(buffer_t *buffer)
    free(buffer);
 }
 
+// clear the buffer, reset length and position
+void buffer_clear(buffer_t *buffer)
+{
+	memset(buffer->data, 0, buffer->length);
+	buffer->length = 0;
+	buffer->position = 0;
+}
+
 // resize buffer to a specified size
 //		- return 1 if there was an issue
 //		- return 0 on successful resize
@@ -78,6 +86,14 @@ int buffer_resize(buffer_t *buffer, size_t size)
 	return 0;
 }
 
+// set the buffer's position
+void buffer_set_position(buffer_t *buffer, size_t position)
+{
+	// the buffer will be resized if a write is attempted
+	//	when position > buffer->position
+	buffer->position = position;
+}
+
 // creates a hex dump of data within our buffer
 // also prints useful information about buffer (size, addresses, etc)
 void buffer_dump(buffer_t *buffer, FILE *file)
@@ -104,7 +120,7 @@ void buffer_dump(buffer_t *buffer, FILE *file)
             fprintf(file, " ");
 
          if ((i + j) < buffer->length)
-            fprintf(file, "%02x ", buffer->data[i + j]);
+            fprintf(file, "%02x ", (unsigned char)buffer->data[i + j]);
          else
             fprintf(file, "   ");
       }
@@ -176,4 +192,87 @@ void buffer_write_string(buffer_t *buffer, char *data)
 	size_t len = strlen(data) + 1;
  
 	buffer_write_data(buffer, data, len);
+}
+
+// attempt to read the next number of bytes from the buffer
+//		- the bytes read are passed by ref (data)
+//		- returns 0 on success
+//		- returns 1 on failure
+int buffer_read_data(buffer_t *buffer, void *data, size_t length)
+{
+	// make sure the buffer is valid!
+	if (buffer == NULL)
+		return 1;
+
+	// don't read past the buffer!
+	if ((length + buffer->position) > buffer->length)
+		return 1;
+
+	memcpy(data, buffer->data + buffer->position, length);
+	buffer->position += length;
+
+	return 0;
+}
+
+// read a byte from the buffer
+//		- read byte is returned by ref (data)
+//		- returns is based on 0 for success, 1 for failure
+int buffer_read_byte(buffer_t *buffer, char *data)
+{
+	return buffer_read_data(buffer, data, 1);
+}
+
+// read a word (2 bytes) from the buffer
+//		- read word is returned by ref (data)
+//		- returns is based on 0 for success, 1 for failure
+int buffer_read_word(buffer_t *buffer, short *data)
+{
+	return buffer_read_data(buffer, data, 2);
+}
+
+// read a dword (4 bytes) from the buffer
+//		- read dword is returned by ref (data)
+//		- returns is based on 0 for success, 1 for failure
+int buffer_read_dword(buffer_t *buffer, int *data)
+{
+	return buffer_read_data(buffer, data, 4);
+}
+
+// read a null-teriminated string from the buffer
+//		- returns 0 on success
+//		- returns 1 on failure (invalid buffer or read past buffer size)
+//		- returns 2 when finding we didn't read a null before max_length
+int buffer_read_string(buffer_t *buffer, char *data, size_t max_length)
+{
+	size_t length = 0;
+	size_t position;
+
+	// make sure the buffer is valid!
+	if (buffer->data == NULL)
+		return 1;
+
+	position = buffer->position;
+
+	// make sure we don't try to read past the buffer size
+	if ((position + max_length) > buffer->length)
+		return 1;
+
+	// copy character by character until we hit max_length or a null	
+	while ((buffer->data[position] != '\0') && (length < max_length))
+	{
+		data[length] = buffer->data[position];
+		position++;
+		length++;
+	}
+
+	buffer->position += length + 1;
+	
+	// make sure we're null-terminated
+	data[length] = '\0';
+
+	// we read as much as we could, but didn't hit a null
+	if (buffer->data[position] != '\0')
+		return 2;
+
+	return 0;
 }
