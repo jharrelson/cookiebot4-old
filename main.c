@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "buffer.h"
+#include "socket.h"
 
 int main()
 {
@@ -69,6 +70,13 @@ int main()
 	printf("read string : %s\n", string);
 
 	buffer_destroy(buff);
+
+	printf("------------------\n");
+
+	socket_t *socket = socket_create();
+	if (socket_connect(socket, "useast.battle.net", "6112") == 0)
+		printf("connected!\n");
+	printf("%s\n", socket_get_address(socket));
 
 	return 0;
 }

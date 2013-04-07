@@ -17,10 +17,12 @@ buffer_t *buffer_create()
 //		- returns null if there was a problem
 buffer_t *buffer_create_size(size_t size)
 {
+	buffer_t *new_buffer = NULL;
+	
 	if (size == 0)
 		size = DEFAULT_BUF_SIZE;
 
-	buffer_t *new_buffer = malloc(sizeof(buffer_t));
+	new_buffer = malloc(sizeof(buffer_t));
 
 	// return null -- we couldn't allocate memory block for struct
 	if (new_buffer == NULL)
@@ -91,6 +93,9 @@ int buffer_resize(buffer_t *buffer, size_t size)
 // set the buffer's position
 void buffer_set_position(buffer_t *buffer, size_t position)
 {
+	if (buffer == NULL)
+		return;
+
 	// the buffer will be resized if a write is attempted
 	//	when position > buffer->position
 	buffer->position = position;
@@ -99,18 +104,27 @@ void buffer_set_position(buffer_t *buffer, size_t position)
 // return the current position
 int buffer_get_position(buffer_t *buffer)
 {
+	if (buffer == NULL)
+		return 0;
+
 	return buffer->position;
 }
 
 // return the length of the buffer
 size_t buffer_get_length(buffer_t *buffer)
 {
+	if (buffer == NULL)
+		return 0;
+
 	return buffer->length;
 }
 
 // return the size of the allocated memory block
 size_t buffer_get_size(buffer_t *buffer)
 {
+	if (buffer == NULL)
+		return 0;
+
 	return buffer->size;
 }
 
