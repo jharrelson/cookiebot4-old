@@ -1,6 +1,8 @@
 #ifndef SOCKET_H_
 #define SOCKET_H_
 
+#include <stdlib.h>
+
 typedef struct socket_t
 {
 	// file descirpotr

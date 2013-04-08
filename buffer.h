@@ -1,5 +1,6 @@
 #ifndef BUFFER_H_
 #define BUFFER_H_
+#include <stdio.h>
 
 typedef struct buffer_t
 {
@@ -22,6 +23,9 @@ void buffer_destroy(buffer_t *buffer);
 
 // clear buffer, reset position and length
 void buffer_clear(buffer_t *buffer);
+
+// jump a select amount of bytes in the buffer
+int buffer_skip_bytes(buffer_t *buffer, size_t length);
 
 // resize buffer to a new size
 int buffer_resize(buffer_t *buffer, size_t size);

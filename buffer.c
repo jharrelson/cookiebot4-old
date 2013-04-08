@@ -62,6 +62,24 @@ void buffer_clear(buffer_t *buffer)
 	buffer->position = 0;
 }
 
+// incrememnt the position by a selected amount of bytes
+//		returns 1 if there was an issue
+//		returns 0 on success
+int buffer_skip_bytes(buffer_t *buffer, size_t length)
+{
+	// make sure we have a valid buffer
+	if (buffer == NULL)
+		return 1;
+
+	// make sure we don't try to read past the buffer length
+	if ((buffer->position + length) > buffer->length)
+		return 1;
+
+	buffer->position += length;
+
+	return 0;
+}
+
 // resize buffer to a specified size
 //		- return 1 if there was an issue
 //		- return 0 on successful resize
@@ -335,8 +353,8 @@ int buffer_peek_string(buffer_t *buffer, char *data, size_t max_length)
    position = buffer->position;
 
    // make sure we don't try to read past the buffer size
-   if ((position + max_length) > buffer->length)
-      return 1;
+//   if ((position + max_length) > buffer->length)
+//      return 1;
 
    // copy character by character until we hit max_length or a null
    while ((buffer->data[position] != '\0') && (length < max_length))
